@@ -3,6 +3,9 @@
 The **Clubmaster Booking Plugin** allows you to easily embed a booking flow into any website.
 It connects to the [Clubmaster API](https://app.clubmaster.org/api/v3/doc) and can be customized to fit your brand and business needs.
 
+A live demo of the plugin is available here:
+👉 [https://demo.optikpartner.dk/book-appointment/](https://demo.optikpartner.dk/book-appointment/)
+
 ---
 
 ## 🚀 Quick Start
@@ -122,6 +125,54 @@ window.BW_WIDGET_CONFIG = {
 
 ---
 
+## 📊 Plugin Features
+
+The Clubmaster Booking Plugin supports a wide range of customization and integration features through its configuration panel:
+
+### 🌐 Identifier & Session Settings
+
+* Set booking variant name and retention duration (e.g., 1 hour, 1 day, 1 month).
+
+### 🛍️ Landing Page Content
+
+* Customize landing page footer content using rich text (HTML allowed).
+
+### ⚖️ General Settings
+
+* Define menu summary and footer texts.
+* Select your analytics provider: None, Google Analytics, or Google Tag Manager.
+* Enable or disable auto-loading of tracking scripts.
+
+### 🎨 UI & Theme Settings
+
+* Set primary and text colors, background dimming levels.
+* Customize icons, animations, font family, and border radius.
+* Enable/disable display on mobile, tablet, desktop.
+* Choose widget flow: by Service first or Location first.
+
+### ✨ Popup Design
+
+* Select a Bootstrap icon (clock, coffee, calendar, etc.) with custom text.
+* Enable animation and different behaviors based on device type.
+
+### ⚛️ Custom HTML Injection
+
+* Inject custom HTML/JS into `<head>` or `<body>` for scripts, styles, or tracking codes.
+
+### 🔄 Step Configuration
+
+Each step in the booking flow is fully configurable:
+
+* **Service**: multiple selection, auto-confirm, preselection, show price/duration, custom labels.
+* **Location**: allow multiple, auto-confirm, preselection, custom labels.
+* **Employee**: skip step, allow all employees, name formatting, preselection, labels.
+* **Schedule**: customize labels for calendar view and selection buttons.
+* **Submit**: fully define input fields like name, email, phone, address, notes, GDPR consent, etc.
+* **Payment**: optionally skip step or define titles and CTA buttons.
+* **Thank You Page**: add animations, custom messages, calendar links, and directions.
+
+---
+
 ## 📚 API Documentation
 
 For advanced use cases, refer to the [Clubmaster API Documentation](https://app.clubmaster.org/api/v3/doc).
@@ -133,6 +184,3 @@ The **public booking endpoints** describe the data and workflows used by this pl
 
 This plugin is part of the **Clubmaster** platform.
 Use is subject to your service agreement and API terms.
-
----
-
