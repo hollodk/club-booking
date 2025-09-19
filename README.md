@@ -85,6 +85,34 @@ Just define `window.BW_WIDGET_CONFIG` before loading the script.
 
 ---
 
+## 🎛️ Opening Modal via Button
+
+In addition to inline rendering and automatic triggers, you can open the booking widget modal manually from **any button or element** by calling the global function `bwWidgetOpen()`.
+
+**Example:**
+
+```html
+<button onclick="bwWidgetOpen()">Book Now</button>
+```
+
+---
+
+## 🔔 Fallback Trigger (Auto-Modal) When Inline Isn’t Visible
+
+If the inline widget does not exist, the server can be configured to automatically inject a **trigger button** on the page. Clicking this trigger opens the booking widget as a modal overlay.
+
+- **Server-controlled**: Requires enabling in plugin settings, no extra client code is needed.
+- **Behavior**: Trigger appears if inline widget is invisible; clicking it opens the modal flow.
+- **Styling**: Trigger inherits your `uiOverrides` theme (colors, border radius, etc.).
+- **Analytics**: Same tracking events as inline flow.
+
+**Related client options:**
+- `inlineAlsoShowModalTrigger: true` — always show trigger in addition to inline widget.
+- `forceModal: true` — skip inline completely and use modal only.
+- `containerId` — where inline widget should mount if visible.
+
+---
+
 ## 🧩 Full Configuration Reference
 
 ```js
