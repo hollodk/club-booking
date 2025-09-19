@@ -1,182 +1,224 @@
 # Clubmaster Booking Plugin
 
-The **Clubmaster Booking Plugin** allows you to easily embed a booking flow into any website.
-It connects to the [Clubmaster API](https://app.clubmaster.org/api/v3/doc) and can be customized to fit your brand and business needs.
+The **Clubmaster Booking Plugin** lets you embed a modern, multi-step booking flow into any website.
+It connects to the [Clubmaster API](https://app.clubmaster.org/api/v3/doc) and is highly configurable (UI theme, order of steps, text, hooks, analytics, i18n, etc.).
 
-A live demo of the plugin is available here:
+**Live demo**
 👉 [https://demo.optikpartner.dk/book-appointment/](https://demo.optikpartner.dk/book-appointment/)
 
 ---
 
 ## 🚀 Quick Start
 
-### 1. Standalone Booking Page
+### Option A — Standalone public URL
 
-Every plugin comes with its own public booking URL.
-You can use this URL directly without any integration:
+Every plugin has a public booking page:
 
 ```
 https://app.clubmaster.org/public/booking/{id}/
 ```
 
-Replace `{id}` with your plugin's unique ID.
+Replace `{id}` with your plugin’s ID.
 
 ---
 
-### 2. Embedding the Plugin in Your Website
+### Option B — Embed on your site
 
-Add this script to your page, replacing `id` with your plugin ID:
-
-```html
-<script>
-  window.BW_WIDGET_CONFIG = {
-    id: 62, // Required
-    name: "Variant 3", // Optional, for identifying widget variant
-    attributes: { color: "RED" }, // Optional, for custom attributes
-  };
-
-  const script = document.createElement("script");
-  script.src = "https://cdn.beastscan.com/plugin/booking/plugin.js";
-  document.head.appendChild(script);
-</script>
-```
-
-Add a container element where you want the booking widget to appear:
+Add a container where the widget will render:
 
 ```html
 <div id="bw-widget"></div>
 ```
 
-**Note:**
+Configure and load the script:
 
-* The widget will automatically render inside the `#bw-widget` container.
-* The plugin will follow the container’s width.
-  For responsiveness, use `max-width` instead of fixed `width`.
+```html
+<script>
+  window.BW_WIDGET_CONFIG = {
+    id: 62,                             // ✅ required: your plugin ID
+  };
 
----
-
-## ⚙️ Customizing Plugin Behavior
-
-The `window.BW_WIDGET_CONFIG` object allows you to customize how the plugin works.
-You can set:
-
-* **`id`** (required) – The plugin ID from your CRM system.
-* **`name`** (optional) – A label for the plugin instance.
-* **`attributes`** (optional) – Key/value pairs for customization (e.g., colors, variants).
-
----
-
-## 📊 Tracking Events
-
-You can track user interactions and send data to **Google Analytics**, **Google Tag Manager**, or any other analytics system.
-
-### Example:
-
-```js
-window.BW_WIDGET_CONFIG = {
-  id: 62,
-  name: "Variant 3",
-  attributes: { color: "RED" },
-
-  trackEvents: {
-    viewService: function () {
-      return {
-        plugin_name: "Hello",
-      };
-    },
-    chooseService: function (summary) {
-      return {
-        friendly_name: summary.service.friendly_name,
-      };
-    },
-    chooseLocation: function (summary) {
-      return {
-        created_at: summary.location.created_at,
-        postcode: summary.location.postcode,
-      };
-    },
-  },
-};
+  const s = document.createElement("script");
+  s.src = "https://cdn.beastscan.com/plugin/booking/plugin.js";
+  document.head.appendChild(s);
+</script>
 ```
 
-**Notes:**
+**Notes**
 
-* Each `choose` event automatically sends `id` and `name` to analytics.
-* The `summary` object contains additional data that you can map to custom analytics fields.
+* The widget auto-renders into `#bw-widget` unless you specify `containerId`.
+* The widget follows the container’s width — use `max-width` for responsiveness.
 
 ---
 
-## 📦 Accessing the Booking Object
+## ⚡ Initialization Modes
 
-You can execute custom logic when a booking is confirmed by using the `onConfirm` callback:
+You can let the plugin auto-init, or init it yourself.
+
+**Auto-init (default)**
+Just define `window.BW_WIDGET_CONFIG` before loading the script.
+
+**Manual init**
+
+```html
+<div id="bw-widget"></div>
+
+<script>
+  window.BW_WIDGET_CONFIG = {
+    id: 62,
+    autoInit: false, // 👈 turn off auto-init
+  };
+</script>
+
+<script src="https://cdn.beastscan.com/plugin/booking/plugin.js"></script>
+
+<script>
+  // Later, when you’re ready:
+  BookingWidget.init({
+    ...window.BW_WIDGET_CONFIG,
+    containerId: "bw-widget",
+    inlineAlsoShowModalTrigger: true, // show a modal trigger next to the inline widget
+    // forceModal: true,              // render only as a modal (no inline)
+  });
+</script>
+```
+
+---
+
+## 🧩 Full Configuration Reference
 
 ```js
 window.BW_WIDGET_CONFIG = {
+  // === Core ===
   id: 62,
-  name: "Variant 3",
-  attributes: { color: "RED" },
+  name: "VariantA",
+  debug: false,
+  autoInit: true,
+  containerId: "bw-widget",
+  inlineAlsoShowModalTrigger: true,
+  // weekStart: "monday",
 
+  // === API base override ===
+  apiBaseURL: "",
+
+  // === Organization/locale overrides ===
+  locale: "da-DK",
+  currency: "DKK",
+
+  // === Internationalization ===
+  i18n: {
+    en: { onAt: "On {date} at {time}", dateTimeNotSelected: "Date & Time not selected" },
+    da: { onAt: "{date} kl. {time}",  dateTimeNotSelected: "Dato og tidspunkt er ikke valgt" },
+    de: { onAt: "Am {date} um {time}", dateTimeNotSelected: "Datum und Uhrzeit nicht ausgewählt" },
+    es: { onAt: "El {date} a las {time}", dateTimeNotSelected: "Fecha y hora no seleccionadas" },
+    fr: { onAt: "Le {date} à {time}", dateTimeNotSelected: "Date et heure non sélectionnées" },
+  },
+
+  // === UI Overrides ===
+  uiOverrides: {
+    borderRadius: "3xl",
+    fontFamily: "Archivo",
+    colors: {
+      primary:  "#0059ff",
+      secondary:"#00b894",
+    },
+  },
+
+  // === Attributes ===
+  attributes: {
+    experiment: { experimentId: "exp-1234", cohort: "A" },
+  },
+
+  // === Analytics ===
+  trackEvents: {
+    viewService:  { brand: "Acme", market: "DK" },
+    viewLocation: { market: "DK" },
+    viewEmployee: { department: "optometry" },
+    viewSchedule: { variant: "A" },
+    viewSubmit:   { goal: "booking" },
+    viewThankyou: { goal: "booking", stage: "complete" },
+  },
+
+  // === Hooks: BEFORE ===
+  onBeforeApiInit(req)      { return req; },
+  onBeforeApiService(req)   { return req; },
+  onBeforeApiLocation(req)  { return req; },
+  onBeforeApiEmployee(req)  { return req; },
+  onBeforeApiSchedule(req)  {
+    const now = new Date();
+    const from = now.toISOString().slice(0, 10);
+    const to   = new Date(now); to.setDate(to.getDate() + 30);
+    const toStr = to.toISOString().slice(0, 10);
+    return req;
+  },
+  onBeforeApiConfirm(req)   { return req; },
+
+  // === Hooks: AFTER ===
+  onApiInit(config)       { return config; },
+  onApiService(items)     { return items; },
+  onApiLocation(items)    { return items; },
+  onApiEmployee(items)    { return items.slice(0, 10); },
+  onApiSchedule(items)    { return items; },
+  onApiConfirm(result)    { return result; },
+
+  // === Booking Callback ===
   onConfirm(booking) {
     console.log("Booking confirmed:", booking);
-    // You can send booking data to your CRM, analytics, or other systems here
   },
 };
 ```
 
 ---
 
-## 📊 Plugin Features
+## 📊 Analytics Examples
 
-The Clubmaster Booking Plugin supports a wide range of customization and integration features through its configuration panel:
+**Static payloads**
 
-### 🌐 Identifier & Session Settings
+```js
+trackEvents: {
+  viewService:  { market: "DK" },
+  viewThankyou: { goal: "booking", stage: "complete" },
+}
+```
 
-* Set booking variant name and retention duration (e.g., 1 hour, 1 day, 1 month).
+**Dynamic payloads**
 
-### 🛍️ Landing Page Content
-
-* Customize landing page footer content using rich text (HTML allowed).
-
-### ⚖️ General Settings
-
-* Define menu summary and footer texts.
-* Select your analytics provider: None, Google Analytics, or Google Tag Manager.
-* Enable or disable auto-loading of tracking scripts.
-
-### 🎨 UI & Theme Settings
-
-* Set primary and text colors, background dimming levels.
-* Customize icons, animations, font family, and border radius.
-* Enable/disable display on mobile, tablet, desktop.
-* Choose widget flow: by Service first or Location first.
-
-### ✨ Popup Design
-
-* Select a Bootstrap icon (clock, coffee, calendar, etc.) with custom text.
-* Enable animation and different behaviors based on device type.
-
-### ⚛️ Custom HTML Injection
-
-* Inject custom HTML/JS into `<head>` or `<body>` for scripts, styles, or tracking codes.
-
-### 🔄 Step Configuration
-
-Each step in the booking flow is fully configurable:
-
-* **Service**: multiple selection, auto-confirm, preselection, show price/duration, custom labels.
-* **Location**: allow multiple, auto-confirm, preselection, custom labels.
-* **Employee**: skip step, allow all employees, name formatting, preselection, labels.
-* **Schedule**: customize labels for calendar view and selection buttons.
-* **Submit**: fully define input fields like name, email, phone, address, notes, GDPR consent, etc.
-* **Payment**: optionally skip step or define titles and CTA buttons.
-* **Thank You Page**: add animations, custom messages, calendar links, and directions.
+```js
+trackEvents: {
+  chooseService(summary) {
+    return { service_name: summary.service?.friendly_name, price: summary.service?.price };
+  },
+  chooseLocation(summary) {
+    return { postcode: summary.location?.postcode };
+  },
+}
+```
 
 ---
 
-## 📚 API Documentation
+## ✅ Booking Confirmation
 
-For advanced use cases, refer to the [Clubmaster API Documentation](https://app.clubmaster.org/api/v3/doc).
-The **public booking endpoints** describe the data and workflows used by this plugin.
+```js
+onConfirm(booking) {
+  // booking.id, booking.starts_at, booking.customer, etc.
+  console.log("Booked:", booking);
+}
+```
+
+---
+
+## 🧠 Debugging
+
+* Set `debug: true` to enable detailed console logs.
+* Use `onBefore*` hooks to inspect/modify requests.
+* Use `onApi*` hooks to inspect/modify responses.
+
+---
+
+## 📚 API Reference
+
+See the public API docs: [https://app.clubmaster.org/api/v3/doc](https://app.clubmaster.org/api/v3/doc)
+Endpoints used: `/api/v3/public/booking/`
 
 ---
 
@@ -184,3 +226,37 @@ The **public booking endpoints** describe the data and workflows used by this pl
 
 This plugin is part of the **Clubmaster** platform.
 Use is subject to your service agreement and API terms.
+
+---
+
+## Minimal Demo
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Booking Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@100..900&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <div id="bw-widget"></div>
+
+  <script>
+    window.BW_WIDGET_CONFIG = {
+      id: 62,
+      uiOverrides: { fontFamily: "Archivo", borderRadius: "3xl" },
+      inlineAlsoShowModalTrigger: true,
+      trackEvents: { viewThankyou: { goal: "booking", stage: "complete" } },
+      onConfirm(booking) { console.log("Booked:", booking); },
+    };
+  </script>
+
+  <script src="https://cdn.beastscan.com/plugin/booking/plugin.js"></script>
+</body>
+</html>
+```
+
