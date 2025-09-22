@@ -113,6 +113,27 @@ If the inline widget does not exist, the server can be configured to automatical
 
 ---
 
+## 📍 Preselecting a Location
+
+You can preselect a location to create custom landing pages for a specific store or branch.
+When a location is preselected, you can also apply skip: true to automatically skip the location step.
+
+Example:
+window.BW_WIDGET_CONFIG = {
+  id: 62,
+  overrideConfig: {
+    steps: {
+      location: {
+        preselected: [2423], // ID(s) of the location(s) you want to lock in
+        skip: true,       // 👈 optional: skip location step if only one is preselected
+      },
+    },
+  },
+};
+
+This is especially useful when you want to build store-specific landing pages that go straight into service or employee selection without asking the user to choose a location.
+
+---
 ## 🧩 Full Configuration Reference
 
 ```js
