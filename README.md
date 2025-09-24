@@ -49,6 +49,69 @@ Configure and load the script:
 * The widget auto-renders into `#bw-widget` unless you specify `containerId`.
 * The widget follows the container’s width — use `max-width` for responsiveness.
 
+## 🧪 SDK at a Glance
+
+- Load once via the CDN and pass window.BW_WIDGET_CONFIG before the script.
+- Global API:
+  - BookingWidget.init(config) — initialize manually (if autoInit: false).
+  - bwWidgetOpen() / bwWidgetClose() — open/close the modal (also auto-created).
+  - bwWidgetOpen_<instanceKey>() / bwWidgetClose_<instanceKey>() for multi‑instance pages.
+- Hooks:
+  - onBeforeApi* to change requests
+  - onApi* to change responses
+  - onConfirm(booking) fires once on thank you page after a successful booking
+  - onViewService(progress), onViewLocation(progress), onViewEmployee(progress), onViewSchedule(progress), onViewSubmit(progress), onViewThankyou(progress) — called on each page switch with current selection summary
+- Analytics:
+  - Optional auto‑insert of GA or GTM
+  - Simple event tracking via trackEvents + BW_WIDGET_DISPATCH
+- Theming:
+  - Style via uiOverrides (colors, radius, font)
+  - Renders inside Shadow DOM to avoid CSS conflicts
+
+## Per‑step View Hooks
+
+- These fire on every page switch when the corresponding step becomes active.
+- Signature: onViewX(progress)
+- Steps:
+  - onViewService
+  - onViewLocation
+  - onViewEmployee
+  - onViewSchedule
+  - onViewSubmit
+  - onViewThankyou
+
+Payload:
+- progress.step: { key, index, title }
+- progress.summary: {
+    products: Array,
+    totalPrice: number|null,
+    totalTime: number|null,
+    locations: Array,
+    employee: object|true|null,
+    date: string|null,
+    slot: object|null
+  }
+- progress.isAllValid: boolean
+
+Example:
+```html
+<script>
+  window.BW_WIDGET_CONFIG = {
+    id: 62,
+    onViewService(p)  { console.log("View Service:", p); },
+    onViewLocation(p) { console.log("View Location:", p); },
+    onViewEmployee(p) { console.log("View Employee:", p); },
+    onViewSchedule(p) { console.log("View Schedule:", p); },
+    onViewSubmit(p)   { console.log("View Submit:", p); },
+    onViewThankyou(p) { console.log("View Thankyou:", p); },
+  };
+</script>
+```
+
+Notes:
+- These hooks fire in addition to analytics tracking and any auto‑advance/skip logic.
+- They are invoked on initial step render and all subsequent navigations.
+
 ---
 
 ## ⚡ Initialization Modes
@@ -83,6 +146,37 @@ Just define `window.BW_WIDGET_CONFIG` before loading the script.
 </script>
 ```
 
+## 🧰 SDK API (Globals)
+
+- BookingWidget.init(config)
+  - Use when you set autoInit: false or want to create more instances.
+- bwWidgetOpen() / bwWidgetClose()
+  - Always defined for convenience.
+- bwWidgetOpen_<instanceKey>() / bwWidgetClose_<instanceKey>()
+  - If you pass instanceKey in init, instance‑scoped open/close helpers are created.
+
+Example: multiple widgets on the same page
+
+```html
+<div id="w1"></div>
+<div id="w2"></div>
+
+<script>
+  const base = {
+    id: 62,
+    autoInit: false,
+    inlineAlsoShowModalTrigger: true,
+  };
+
+  BookingWidget.init({ ...base, containerId: "w1", instanceKey: "storeA" });
+  BookingWidget.init({ ...base, containerId: "w2", instanceKey: "storeB" });
+
+  // Later:
+  bwWidgetOpen_storeA();
+  bwWidgetClose_storeB();
+</script>
+```
+
 ---
 
 ## 🎛️ Opening Modal via Button
@@ -93,6 +187,12 @@ In addition to inline rendering and automatic triggers, you can open the booking
 
 ```html
 <button onclick="bwWidgetOpen()">Book Now</button>
+```
+
+You can also close the modal programmatically:
+
+```html
+<button onclick="bwWidgetClose()">Close widget</button>
 ```
 
 ---
@@ -133,7 +233,177 @@ window.BW_WIDGET_CONFIG = {
 
 This is especially useful when you want to build store-specific landing pages that go straight into service or employee selection without asking the user to choose a location.
 
+## 🎯 Preselects and Auto‑Skip (Services/Employees too)
+
+You can preselect across steps and optionally skip them:
+
+```js
+overrideConfig: {
+  steps: {
+    service:  { preselected: [123], allowMultiple: false, skip: true },
+    location: { preselected: [2423], skip: true },
+    employee: { preselected: 789,   skip: true },
+  },
+}
+```
+
+Auto‑skip behavior:
+- If a step has exactly one available choice, it’s skipped automatically.
+- Employee is hidden in the left menu when auto‑skipped; service/location remain visible.
+
 ---
+## 🧾 Configuration Cheat Sheet
+
+```js
+window.BW_WIDGET_CONFIG = {
+  // Required
+  id: 62,
+
+  // Optional
+  autoInit: true,              // set false to init later yourself
+  containerId: "bw-widget",    // where inline widget renders
+  forceModal: false,           // ignore inline and use modal only
+  inlineAlsoShowModalTrigger: true, // show a floating "Book" button
+
+  // Locale/Money
+  locale: "da-DK",
+  currency: "DKK",
+  weekStart: "monday",         // or "sunday"
+
+  // Theming
+  uiOverrides: {
+    borderRadius: "3xl",
+    fontFamily: "Archivo",
+    colors: { primary: "#0059ff", secondary: "#00b894" },
+  },
+
+  // Text overrides (per language)
+  i18n: {
+    en: { onAt: "On {date} at {time}", dateTimeNotSelected: "Date & Time not selected" },
+  },
+
+  // Tracking payloads (used when steps are viewed/chosen)
+  trackEvents: {
+    viewThankyou: { goal: "booking", stage: "complete" },
+  },
+
+  // Hooks
+  onBeforeApiInit(req)     { return req; },
+  onApiInit(config)        { return config; },
+
+  onBeforeApiService(req)  { return req; },
+  onApiService(items)      { return items; },
+
+  onBeforeApiLocation(req) { return req; },
+  onApiLocation(items)     { return items; },
+
+  onBeforeApiEmployee(req) { return req; },
+  onApiEmployee(items)     { return items; },
+
+  onBeforeApiSchedule(req) { return req; },
+  onApiSchedule(items)     { return items; },
+
+  onBeforeApiConfirm(req)  { return req; },
+  onApiConfirm(result)     { return result; },
+
+  // Called once after a successful booking (thank you page)
+  onConfirm(booking) {
+    console.log("Booking confirmed:", booking);
+  },
+
+  // Per‑step view hooks
+  onViewService(p)  { /* ... */ },
+  onViewLocation(p) { /* ... */ },
+  onViewEmployee(p) { /* ... */ },
+  onViewSchedule(p) { /* ... */ },
+  onViewSubmit(p)   { /* ... */ },
+  onViewThankyou(p) { /* ... */ },
+
+  // Advanced overrides (merged into server config)
+  overrideConfig: {
+    // Example: enable GTM and autoload the container
+    generel: {
+      analytics: { provider: "gtm", trackingId: "GTM-XXXXXXX", autoLoadScript: true },
+    },
+    steps: {
+      location: { preselected: [2423], skip: true },
+    },
+  },
+
+  // Advanced: override API base (debug/testing)
+  apiBaseURL: "https://app.optikpartner.dk/api/v3/public/booking/",
+};
+```
+
+## 🍳 Hooks Cookbook
+
+- Limit schedule window to the next 30 days:
+
+```js
+onBeforeApiSchedule(req) {
+  const now = new Date();
+  const from = now.toISOString().slice(0, 10);
+  const to = new Date(now); to.setDate(to.getDate() + 30);
+  return { ...req, body: { ...req.body, from, to: to.toISOString().slice(0,10) } };
+}
+```
+
+- Filter employees to first 10:
+
+```js
+onApiEmployee(items) {
+  return items.slice(0, 10);
+}
+```
+
+- Remove employees without a profile image:
+
+```js
+onApiEmployee(items) {
+  // Keep only employees that have a non-empty user.image.url
+  return items.filter((e) => {
+    const url = e?.user?.image?.url;
+    return typeof url === "string" && url.trim().length > 0;
+  });
+}
+```
+
+Note: If this filter removes all employees, the widget will automatically switch to “any employee” selection for the booking step. This filter is applied both in the Employee step and to employees shown under each location (location.employees used for thumbnails).
+
+- Remove employees without an image from the Location lookup (explicit via onApiLocation):
+
+```js
+onApiLocation(items) {
+  return items.map((loc) => {
+    const filtered = (loc.employees || []).filter((e) => {
+      const url = e?.user?.image?.url;
+      return typeof url === "string" && url.trim().length > 0;
+    });
+    return { ...loc, employees: filtered };
+  });
+}
+```
+
+Note: This is only needed if you want a location-specific rule. If you already filter in onApiEmployee, the widget applies that filter to location.employees automatically.
+
+- Remove all employees from the Location lookup (hide thumbnails entirely):
+
+```js
+onApiLocation(items) {
+  return items.map((loc) => ({ ...loc, employees: [] }));
+}
+```
+
+This prevents employee thumbnails from rendering under each location.
+
+- Enrich confirm payload:
+
+```js
+onBeforeApiConfirm(req) {
+  return { ...req, body: { ...req.body, meta: { source: "landing-page-A" } } };
+}
+```
+
 ## 🧩 Full Configuration Reference
 
 ```js
@@ -219,6 +489,37 @@ window.BW_WIDGET_CONFIG = {
 
 ---
 
+## 📈 Analytics Setup (GA or GTM)
+
+To auto‑insert GA or GTM and wire up event dispatching, set analytics under overrideConfig.generel.analytics.
+
+- provider: "ga" or "gtm"
+- trackingId: GA4 ID (G-XXXXXXX) or GTM container (GTM-XXXXXXX)
+- autoLoadScript: when true, the script/iframe is injected for you
+
+```js
+window.BW_WIDGET_CONFIG = {
+  id: 62,
+  overrideConfig: {
+    generel: {
+      analytics: {
+        provider: "gtm",
+        trackingId: "GTM-XXXXXXX",
+        autoLoadScript: true,
+      },
+    },
+  },
+  trackEvents: {
+    viewService:  { market: "DK" },
+    viewThankyou: { goal: "booking", stage: "complete" },
+  },
+};
+```
+
+If you don’t auto‑load the script, define a global BW_WIDGET_DISPATCH yourself before init:
+- GA: function gtag() { dataLayer.push(arguments); }
+- GTM: function (_, eventName, payload) { dataLayer.push({ event: eventName, ...payload }); }
+
 ## 📊 Analytics Examples
 
 **Static payloads**
@@ -244,6 +545,28 @@ trackEvents: {
 ```
 
 ---
+
+## Per‑step View DOM Events
+
+- Fired on document on each page switch with the same payload as the hooks above.
+
+Event names:
+- clubBookingViewService
+- clubBookingViewLocation
+- clubBookingViewEmployee
+- clubBookingViewSchedule
+- clubBookingViewSubmit
+- clubBookingViewThankyou
+
+Listen example:
+```html
+<script>
+  document.addEventListener("clubBookingViewSchedule", (e) => {
+    const { step, summary, isAllValid } = e.detail;
+    console.log("Viewing schedule step:", step, summary, isAllValid);
+  });
+</script>
+```
 
 ## ✅ Booking Confirmation
 
@@ -277,6 +600,26 @@ This plugin is part of the **Clubmaster** platform.
 Use is subject to your service agreement and API terms.
 
 ---
+
+## 🛠️ Troubleshooting
+
+- Widget doesn’t appear
+  - Ensure a container with id="bw-widget" exists, or set containerId.
+  - If using forceModal: true, call bwWidgetOpen() or enable the floating trigger.
+- API errors or no data
+  - Check CORS and apiBaseURL overrides.
+  - Inspect the Network tab; set debug: true to see verbose logs.
+- No available time slots
+  - Your date window may be too narrow; widen via onBeforeApiSchedule or pick another date.
+- Analytics events not firing
+  - Ensure overrideConfig.generel.analytics is set and BW_WIDGET_DISPATCH exists (auto when autoLoadScript: true).
+- onConfirm didn’t fire
+  - It fires once when the thank you page shows after a successful confirm. Verify the confirm call succeeded and you navigated to thank you.
+
+## 🌐 Browser Support
+
+- The widget uses Shadow DOM and modern JS; it targets evergreen browsers.
+- If you enforce a CSP, allow the configured CDN(s) (e.g., jsDelivr for icons, GA/GTM if enabled).
 
 ## Minimal Demo
 
