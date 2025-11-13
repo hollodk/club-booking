@@ -68,6 +68,30 @@ Configure and load the script:
   - Style via uiOverrides (colors, radius, font)
   - Renders inside Shadow DOM to avoid CSS conflicts
 
+### Typography sizing (ui.fontScale and ui.fontSizes)
+- You can uniformly scale all font sizes or override specific sizes. These map to the widget’s CSS variables that power text-xs, text-sm, text-base, etc., so no template changes are needed.
+- Defaults: { xs: 12, sm: 14, base: 16, lg: 18, xl: 20, 2xl: 24, 3xl: 30, 4xl: 36 } px
+- Examples:
+
+```js
+window.BW_WIDGET_CONFIG = {
+  id: 62,
+  uiOverrides: {
+    fontScale: 1.1, // +10% globally
+  },
+};
+```
+
+```js
+window.BW_WIDGET_CONFIG = {
+  id: 62,
+  uiOverrides: {
+    fontSizes: { base: 18, sm: 16, xl: 22 }, // px overrides
+    fontScale: 1, // optional together with fontSizes
+  },
+};
+```
+
 ## Per‑step View Hooks
 
 - These fire on every page switch when the corresponding step becomes active.
@@ -145,6 +169,38 @@ Just define `window.BW_WIDGET_CONFIG` before loading the script.
   });
 </script>
 ```
+
+## Loading After Page Is Ready (Recommended: Dynamic Injection)
+
+If you want to ensure the widget loads only after the page is ready (and avoid render‑blocking), use dynamic injection with DOMContentLoaded. This method requires no build step and works on any site/CMS.
+
+Prerequisites:
+- Add a container where the widget will render:
+  ```html
+  <div id="bw-widget"></div>
+  ```
+
+Paste this snippet anywhere on your page (head or body):
+
+```html
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    window.BW_WIDGET_CONFIG = {
+      id: 62, // required: your plugin ID
+    };
+
+    var s = document.createElement("script");
+    s.src = "https://cdn.beastscan.com/plugin/booking/plugin.js";
+    s.async = true; // non-blocking fetch
+
+    document.head.appendChild(s);
+  });
+</script>
+```
+
+Notes:
+- This guarantees the page finishes parsing before the widget script is fetched and initialized.
+- Keep your configuration inside the DOMContentLoaded handler so the script can read it at init time.
 
 ## 🧰 SDK API (Globals)
 
@@ -275,6 +331,8 @@ window.BW_WIDGET_CONFIG = {
     borderRadius: "3xl",
     fontFamily: "Archivo",
     colors: { primary: "#0059ff", secondary: "#00b894" },
+    fontScale: 1.0,                 // optional: uniform scaling
+    fontSizes: { base: 16, xl: 20 }, // optional: per-size overrides (px)
   },
 
   // Text overrides (per language)
