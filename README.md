@@ -321,6 +321,10 @@ window.BW_WIDGET_CONFIG = {
   forceModal: false,           // ignore inline and use modal only
   inlineAlsoShowModalTrigger: true, // show a floating "Book" button
 
+  // Platform live statistics (/step endpoint)
+  // When true, disables POST /step calls that update platform live metrics.
+  disablePlatformStepTracking: false,
+
   // Locale/Money
   locale: "da-DK",
   currency: "DKK",
@@ -390,6 +394,25 @@ window.BW_WIDGET_CONFIG = {
 
   // Advanced: override API base (debug/testing)
   apiBaseURL: "https://app.optikpartner.dk/api/v3/public/booking/",
+};
+```
+
+## Platform Live Statistics (/step)
+
+The widget automatically sends a non-blocking telemetry request to the platform when a user views these steps:
+- service
+- location
+- employee
+- schedule
+- submit
+
+This is used to update platform live statistics. Failures are ignored and will not affect the booking flow.
+
+Disable it with:
+```js
+window.BW_WIDGET_CONFIG = {
+  id: 62,
+  disablePlatformStepTracking: true,
 };
 ```
 
